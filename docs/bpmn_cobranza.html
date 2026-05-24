@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BPMN — Proceso de Cobranza | Walter Galindo</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f8f6;color:#1a1a18;padding:2rem;max-width:1100px;margin:0 auto}
+  h1{font-size:22px;font-weight:600;margin-bottom:4px}
+  .subtitle{font-size:14px;color:#5f5e5a;margin-bottom:1.5rem}
+  .author{font-size:12px;color:#888780;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid #e0ddd5}
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;gap:12px;flex-wrap:wrap}
+  .title-block h2{font-size:17px;font-weight:600}
+  .title-block p{font-size:13px;color:#5f5e5a;margin-top:2px}
+  .toggle-wrap{display:flex;border:1px solid #d3d1c7;border-radius:8px;overflow:hidden}
+  .toggle-wrap button{padding:8px 20px;font-size:13px;font-weight:500;border:none;background:transparent;cursor:pointer;color:#888780;transition:background .15s,color .15s}
+  .toggle-wrap button.active{background:#efefed;color:#1a1a18}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
+  .metric-card{background:#efefed;border-radius:8px;padding:14px 16px}
+  .metric-card .label{font-size:11px;color:#888780;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+  .metric-card .value{font-size:24px;font-weight:600}
+  .metric-card .sub{font-size:11px;color:#888780;margin-top:3px}
+  .metric-card.bad .value{color:#a32d2d}
+  .metric-card.good .value{color:#3b6d11}
+  .diagram-area{border:1px solid #e0ddd5;border-radius:12px;overflow:hidden;background:#fff;margin-bottom:1rem}
+  .pool-header{padding:11px 18px;background:#f4f3f0;border-bottom:1px solid #e0ddd5;display:flex;align-items:center;gap:10px}
+  .pool-header span{font-size:14px;font-weight:600}
+  .pool-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+  .badge-red{background:#FCEBEB;color:#a32d2d}
+  .badge-green{background:#EAF3DE;color:#3b6d11}
+  .swim-lanes{display:flex;flex-direction:column}
+  .lane{display:flex;border-bottom:1px solid #e0ddd5;min-height:95px}
+  .lane:last-child{border-bottom:none}
+  .lane-label{width:110px;min-width:110px;display:flex;align-items:center;justify-content:center;padding:8px;border-right:1px solid #e0ddd5;background:#f8f8f6}
+  .lane-label span{font-size:10px;font-weight:600;color:#888780;text-align:center;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.05em;text-transform:uppercase}
+  .lane-content{flex:1;padding:14px 18px;display:flex;align-items:center;overflow-x:auto}
+  .flow{display:flex;align-items:center;min-width:max-content}
+  .node{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .node-box{border:1.5px solid;border-radius:7px;padding:7px 11px;font-size:11px;font-weight:600;text-align:center;min-width:88px;max-width:105px;line-height:1.35}
+  .tag{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;margin-top:2px}
+  .arrow{width:30px;height:2px;background:#b4b2a9;position:relative;flex-shrink:0;align-self:center;margin-bottom:22px}
+  .arrow::after{content:'';position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid #b4b2a9}
+  .event-start,.event-end{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center;margin-bottom:22px}
+  .event-start{border:2.5px solid #1D9E75;background:#E1F5EE}
+  .event-end{border:3.5px solid #a32d2d;background:#FCEBEB}
+  .event-dot{width:9px;height:9px;border-radius:50%}
+  .gateway{width:38px;height:38px;transform:rotate(45deg);border:2px solid #BA7517;background:#FAEEDA;flex-shrink:0;align-self:center;margin-bottom:22px}
+  .manual{border-color:#888780;color:#444441;background:#F1EFE8}
+  .auto-node{border-color:#185FA5;color:#0C447C;background:#E6F1FB}
+  .waste-node{border-color:#a32d2d;color:#791F1F;background:#FCEBEB}
+  .ok-node{border-color:#3B6D11;color:#27500A;background:#EAF3DE}
+  .tag-waste{background:#FCEBEB;color:#a32d2d}
+  .tag-auto{background:#E6F1FB;color:#185FA5}
+  .tag-ok{background:#EAF3DE;color:#3b6d11}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;padding:11px 16px;background:#f4f3f0;border-radius:8px;margin-bottom:1.5rem}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:#5f5e5a}
+  .legend-dot{width:13px;height:13px;border-radius:3px;border:1.5px solid}
+  .opport-section h3{font-size:15px;font-weight:600;margin-bottom:12px}
+  .opport-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:2rem}
+  .opport-card{border:1px solid #e0ddd5;border-radius:8px;padding:14px;background:#fff}
+  .oc-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .oc-icon{width:30px;height:30px;border-radius:6px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:15px;color:#185FA5;flex-shrink:0}
+  .oc-title{font-size:13px;font-weight:600;color:#1a1a18}
+  .oc-body{font-size:12px;color:#5f5e5a;line-height:1.55}
+  .oc-saving{font-size:13px;font-weight:600;color:#3b6d11;margin-top:8px}
+  .pdd-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#185FA5;text-decoration:none;border:1px solid #b5d4f4;padding:6px 14px;border-radius:7px;margin-top:0.5rem}
+  .pdd-link:hover{background:#E6F1FB}
+  @media print{body{padding:1rem}.toggle-wrap{display:none}#view-tobe{display:block!important}}
+</style>
+</head>
+<body>
+
+<h1>BPMN — Proceso de gestión de reportes de cobranza</h1>
+<p class="subtitle">Análisis AS-IS / TO-BE con identificación de oportunidades de automatización</p>
+<p class="author">Walter Basilio Galindo Parra — Portafolio Analista Jr. de Automatización de Procesos · IBR Perú S.A.</p>
+
+<div class="header">
+  <div class="title-block">
+    <h2>Proceso de cobranza telefónica</h2>
+    <p>Consolidación mensual de gestiones de asesores</p>
+  </div>
+  <div class="toggle-wrap">
+    <button class="active" id="btn-asis" onclick="setView('asis')">AS-IS — proceso actual</button>
+    <button id="btn-tobe" onclick="setView('tobe')">TO-BE — con automatización</button>
+  </div>
+</div>
+
+<div class="metrics" id="metrics-asis">
+  <div class="metric-card bad"><div class="label">Tiempo total</div><div class="value">6.7 h</div><div class="sub">por ciclo mensual</div></div>
+  <div class="metric-card bad"><div class="label">Pasos manuales</div><div class="value">8</div><div class="sub">sin automatizar</div></div>
+  <div class="metric-card bad"><div class="label">Tasa de error</div><div class="value">~3%</div><div class="sub">error humano copy-paste</div></div>
+  <div class="metric-card bad"><div class="label">Disponibilidad reporte</div><div class="value">D+1</div><div class="sub">al día siguiente</div></div>
+</div>
+<div class="metrics" id="metrics-tobe" style="display:none">
+  <div class="metric-card good"><div class="label">Tiempo total</div><div class="value">&lt; 5 seg</div><div class="sub">reducción del 99.8%</div></div>
+  <div class="metric-card good"><div class="label">Pasos manuales</div><div class="value">2</div><div class="sub">guardar Excel + revisar</div></div>
+  <div class="metric-card good"><div class="label">Tasa de error</div><div class="value">0%</div><div class="sub">validación automática</div></div>
+  <div class="metric-card good"><div class="label">Disponibilidad reporte</div><div class="value">D+0</div><div class="sub">reporte inmediato 18:00</div></div>
+</div>
+
+<div id="view-asis">
+<div class="diagram-area">
+  <div class="pool-header">
+    <span>Gestión mensual de reportes</span>
+    <span class="pool-badge badge-red">AS-IS — proceso actual</span>
+  </div>
+  <div class="swim-lanes">
+    <div class="lane">
+      <div class="lane-label"><span>Asesor</span></div>
+      <div class="lane-content"><div class="flow">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;margin-right:0"><div class="event-start"><div class="event-dot" style="background:#1D9E75"></div></div><span style="font-size:9px;color:#888780">inicio</span></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box ok-node">Gestionar llamadas y tipificar</div><div class="tag tag-ok">valor agregado</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box waste-node">Registrar en Excel propio</div><div class="tag tag-waste">manual repetitivo</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box waste-node">Subir a carpeta compartida</div><div class="tag tag-waste">5 min diarios</div></div>
+      </div></div>
+    </div>
+    <div class="lane">
+      <div class="lane-label"><span>Analista</span></div>
+      <div class="lane-content"><div class="flow">
+        <div class="node"><div class="node-box waste-node">Descargar 150 archivos</div><div class="tag tag-waste">30 min — puro waste</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box waste-node">Copiar datos a hoja maestra</div><div class="tag tag-waste">3 h — máximo waste</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box waste-node">Limpiar DNIs y duplicados</div><div class="tag tag-waste">75 min manuales</div></div>
+        <div class="arrow"></div>
+        <div style="align-self:center;margin-bottom:22px"><div class="gateway"></div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box waste-node">Crear tablas dinámicas</div><div class="tag tag-waste">60 min manuales</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box waste-node">Hacer gráficos PowerPoint</div><div class="tag tag-waste">45 min — sin valor</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box ok-node">Enviar reporte por correo</div><div class="tag tag-ok">valor agregado</div></div>
+        <div class="arrow"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="event-end"><div class="event-dot" style="background:#a32d2d;border-radius:50%"></div></div><span style="font-size:9px;color:#888780">fin</span></div>
+      </div></div>
+    </div>
+    <div class="lane">
+      <div class="lane-label"><span>Supervisor</span></div>
+      <div class="lane-content"><div class="flow">
+        <div class="node"><div class="node-box manual">Esperar reporte D+1</div><div class="tag tag-waste">sin visibilidad</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box ok-node">Revisar y validar datos</div><div class="tag tag-ok">valor agregado</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box waste-node">Solicitar correcciones</div><div class="tag tag-waste">retrabajo frecuente</div></div>
+      </div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="view-tobe" style="display:none">
+<div class="diagram-area">
+  <div class="pool-header">
+    <span>Gestión mensual de reportes</span>
+    <span class="pool-badge badge-green">TO-BE — con automatización Python</span>
+  </div>
+  <div class="swim-lanes">
+    <div class="lane">
+      <div class="lane-label"><span>Asesor</span></div>
+      <div class="lane-content"><div class="flow">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;margin-right:0"><div class="event-start"><div class="event-dot" style="background:#1D9E75"></div></div><span style="font-size:9px;color:#888780">inicio</span></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box ok-node">Gestionar llamadas y tipificar</div><div class="tag tag-ok">valor agregado</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box ok-node">Guardar Excel en carpeta</div><div class="tag tag-ok">único paso manual</div></div>
+      </div></div>
+    </div>
+    <div class="lane">
+      <div class="lane-label"><span>Bot Python</span></div>
+      <div class="lane-content"><div class="flow">
+        <div class="node"><div class="node-box auto-node">Detectar archivos nuevos</div><div class="tag tag-auto">automático</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box auto-node">Leer y consolidar todo</div><div class="tag tag-auto">Extract — 0.5 seg</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box auto-node">Limpiar, normalizar, dedup</div><div class="tag tag-auto">Transform — 0.5 seg</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box auto-node">Calcular KPIs y exportar</div><div class="tag tag-auto">Load — 1 seg</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box auto-node">Generar 4 gráficos PNG</div><div class="tag tag-auto">Analyze — 1 seg</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box auto-node">Registrar log de ejecución</div><div class="tag tag-auto">Audit — trazable</div></div>
+      </div></div>
+    </div>
+    <div class="lane">
+      <div class="lane-label"><span>Analista</span></div>
+      <div class="lane-content"><div class="flow">
+        <div class="node"><div class="node-box ok-node">Revisar reporte generado</div><div class="tag tag-ok">10 min — solo valor</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box ok-node">Enviar a supervisor</div><div class="tag tag-ok">valor agregado</div></div>
+        <div class="arrow"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="event-end"><div class="event-dot" style="background:#a32d2d;border-radius:50%"></div></div><span style="font-size:9px;color:#888780">fin</span></div>
+      </div></div>
+    </div>
+    <div class="lane">
+      <div class="lane-label"><span>Supervisor</span></div>
+      <div class="lane-content"><div class="flow">
+        <div class="node"><div class="node-box ok-node">Recibir reporte D+0 18:00</div><div class="tag tag-ok">visibilidad inmediata</div></div>
+        <div class="arrow"></div>
+        <div class="node"><div class="node-box ok-node">Tomar decisiones operativas</div><div class="tag tag-ok">máximo valor</div></div>
+      </div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#F1EFE8;border-color:#888780"></div>Tarea manual</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#FCEBEB;border-color:#a32d2d"></div>Waste — sin valor agregado</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#EAF3DE;border-color:#3B6D11"></div>Valor agregado</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#E6F1FB;border-color:#185FA5"></div>Automatizado (bot Python)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#FAEEDA;border-color:#BA7517;transform:rotate(45deg)"></div>Gateway / decisión</div>
+</div>
+
+<div class="opport-section">
+  <h3>Oportunidades de automatización identificadas</h3>
+  <div class="opport-grid">
+    <div class="opport-card">
+      <div class="oc-head"><div class="oc-icon">📂</div><div class="oc-title">Consolidación de archivos</div></div>
+      <div class="oc-body">150 archivos Excel leídos en 0.5 seg con pandas. Elimina 3+ horas de copy-paste manual propenso a error.</div>
+      <div class="oc-saving">Ahorro: ~3.5 h/ciclo mensual</div>
+    </div>
+    <div class="opport-card">
+      <div class="oc-head"><div class="oc-icon">🔧</div><div class="oc-title">Limpieza y normalización</div></div>
+      <div class="oc-body">Regex y reglas de negocio normalizan DNIs, teléfonos y eliminan duplicados automáticamente. Error: 3% → 0%.</div>
+      <div class="oc-saving">Ahorro: ~1.5 h/ciclo mensual</div>
+    </div>
+    <div class="opport-card">
+      <div class="oc-head"><div class="oc-icon">📊</div><div class="oc-title">KPIs y visualizaciones</div></div>
+      <div class="oc-body">Pipeline calcula 11 KPIs y genera 4 gráficos PNG listos para presentar. Sin PowerPoint manual.</div>
+      <div class="oc-saving">Ahorro: ~1.7 h/ciclo mensual</div>
+    </div>
+  </div>
+  <a class="pdd-link" href="docs/PDD.md">Ver Process Design Document completo (PDD.md) →</a>
+</div>
+
+<script>
+function setView(v){
+  var isAs=v==='asis';
+  document.getElementById('btn-asis').className=isAs?'active':'';
+  document.getElementById('btn-tobe').className=isAs?'':'active';
+  document.getElementById('metrics-asis').style.display=isAs?'grid':'none';
+  document.getElementById('metrics-tobe').style.display=isAs?'none':'grid';
+  document.getElementById('view-asis').style.display=isAs?'block':'none';
+  document.getElementById('view-tobe').style.display=isAs?'none':'block';
+}
+</script>
+</body>
+</html>
