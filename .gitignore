@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Datos generados (se regeneran con scripts)
+data/input/*.xlsx
+data/output/*.xlsx
+data/output/logs/*.log
+
+# Conservar la estructura de carpetas en Git
+!data/input/.gitkeep
+!data/output/.gitkeep
+!data/output/logs/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
